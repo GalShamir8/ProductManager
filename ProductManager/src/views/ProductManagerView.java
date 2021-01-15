@@ -5,6 +5,7 @@ package views;
 
 import java.time.LocalDate;
 
+import controller.Controller;
 import controller.ViewListener;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -14,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -26,7 +28,7 @@ import models.eNums;
 
 public class ProductManagerView implements ProductManagerViewable, eNums{
 	//view Listener
-	private ViewListener listner;
+	private ViewListener listener;
 
 	//root
 	private BorderPane bpRoot = new BorderPane();
@@ -57,8 +59,8 @@ public class ProductManagerView implements ProductManagerViewable, eNums{
 		
 		
 		initRoot(sortFlag);
-
-		Scene mainScene = new Scene(bpRoot, 700, 450);
+		
+		Scene mainScene = new Scene(bpRoot, 700, 500);
 		mainStage.setScene(mainScene);
 		mainStage.show();
 	}
@@ -106,7 +108,7 @@ public class ProductManagerView implements ProductManagerViewable, eNums{
 				btnShowAllCustomers, lblStatus, lblStatusDescription);
 
 		//At first status is empty
-		lblStatusDescription.setVisible(false);
+		setStatusDescriptionVisible(false);
 
 		//Buttons actions
 		btnAddProduct.setOnAction(e->addProductToModel());
@@ -147,7 +149,7 @@ public class ProductManagerView implements ProductManagerViewable, eNums{
 		setScpProductVisible(false);
 		setScpCustomerVisible(false);
 
-		//in case of empty file data
+		//open only if file that holds data is empty
 		if(!sortFlag) 
 			checkSort(hbSort);
 
@@ -170,29 +172,114 @@ public class ProductManagerView implements ProductManagerViewable, eNums{
 		hbSort.setSpacing(25);
 
 		cbSort.getItems().addAll(opArr[0], opArr[1], opArr[2]);
-
-		cbSort.setValue("Lexicographic A-Z");
-		btnEnter.setOnAction(e->{////////////////////////////////////////////////
-			String sortOpt = cbSort.getValue();
-			int index = 0;
-			for (int i = 0; i < opArr.length; i++) {
-				if(opArr[i].equals(sortOpt))
-					index = i;
-			}
-			switch(index) {
+		//default choice
+		cbSort.setValue(opArr[0]);
+		
+		btnEnter.setOnAction(e->{
+			
+			switch(cbSort.getSelectionModel().getSelectedIndex()) {
 			case 0:
-				listner.viewUpdateSortType(eSortType.eLexASC.values()[0]);
+				//eSortType = eLexASC
+				listener.viewUpdateSortType(eSortType.values()[0]);
 				break;
 			case 1:
-				listner.viewUpdateSortType(eSortType.values()[1]);
+				//eSortType = eLexDESC
+				listener.viewUpdateSortType(eSortType.values()[1]);
 				break;				
 			case 2:
-				listner.viewUpdateSortType(eSortType.values()[2]);
+				//eSortType = eInsert
+				listener.viewUpdateSortType(eSortType.values()[2]);
 				break;
 			}
+			
 			hbSort.setVisible(false);
 			setLeftDisable(false);
 		});
+	}
+
+	@Override
+	public void addProductToModel() {
+		setMiddleVisibile(false);
+		
+		setGpProductVisible(true);
+		
+		gpProduct.getBtnSendDetails().setOnAction(e->gpProduct.operateSendBtnPressed());
+		
+		//Product fields
+		String pId = gpProduct.getProductId();
+		String pName = gpProduct.getProductName();
+		String pPriceCost = gpProduct.getProductPriceCost();
+		String pPriceSell = gpProduct.getProductPriceSell();
+		//Customer fields
+		String cName = gpProduct.getCustomerName();
+		String cPhone = gpProduct.getCustomerPhone();
+		boolean cPromotion = gpProduct.getCustomerPromotion();
+
+		listener.viewAskToAddProduct(pId, pName, pPriceCost, pPriceSell, cName, cPhone, cPromotion);
+	}
+
+	@Override
+	public void showAllProducts() {
+		setMiddleVisibile(false);
+		
+		setScpProductVisible(true);
+		
+		TextArea output = new TextArea(listener.viewAskForShowProducts());
+		scpProduct.setContent(output);
+	}
+
+	@Override
+	public void showAllCustomers() {
+		setMiddleVisibile(false);
+		
+		setScpCustomerVisible(true);
+		TextArea output = new TextArea(listener.viewAskForShowCustomers());
+		scpCustomer.setContent(output);
+	}
+
+	@Override
+	public void undoLastInsertion() {
+		setMiddleVisibile(false);
+		
+		gpProduct.getBtnUndoLastAction().setOnAction(e->{
+			listener.viewAskForUndo();
+		});
+	}
+
+	@Override
+	public void registerListener(ViewListener listner) {
+		this.listener = listner;
+	}
+
+	@Override
+	public void updateStatus(String msg, eStatusType type) {
+		switch(type) {
+		case eSuccess:
+			setMiddleVisibile(false);
+			setStatusDescriptionVisible(true);
+			lblStatusDescription.setText(msg);
+			lblStatusDescription.setFont(new Font("Tahoma", 13));
+			lblStatusDescription.setTextFill(Color.GREEN);
+			break;
+			
+		case eError:
+			setMiddleVisibile(false);
+			setStatusDescriptionVisible(true);
+			lblStatusDescription.setText(msg);
+			lblStatusDescription.setTextFill(Color.RED);
+			break;
+		}
+	}
+
+	/**
+	 * cleaning all last action windows
+	 * @param visible
+	 */
+	private void setMiddleVisibile(boolean visible) {
+		setGpProductVisible(visible);
+		setScpProductVisible(visible);
+		setScpCustomerVisible(visible);
+		setStatusDescriptionVisible(visible);
 	}
 	
 	private void setLeftDisable(boolean disable) {
@@ -210,53 +297,10 @@ public class ProductManagerView implements ProductManagerViewable, eNums{
 	private void setScpProductVisible(boolean visible) {
 		scpProduct.setVisible(visible);	
 	}
-
-
-	@Override
-	public void addProductToModel() {
-		setScpProductVisible(false);
-		setScpCustomerVisible(false);
-		setGpProductVisible(true);
-		/*
-		 * body
-		*/
-		//setGpProductVisible(false);
+	
+	private void setStatusDescriptionVisible(boolean visible) {
+		lblStatusDescription.setVisible(visible);
 	}
 
-	@Override
-	public void showAllProducts() {
-		setScpCustomerVisible(false);
-		setScpProductVisible(true);
-		/*
-		 * body
-		 */
-		setScpProductVisible(false);
-	}
-
-	@Override
-	public void showAllCustomers() {
-		setScpProductVisible(false);
-		setScpCustomerVisible(true);
-		/*
-		 * body
-		 */
-		setScpCustomerVisible(false);
-	}
-
-	@Override
-	public void undoLastInsertion() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void registerListener(ViewListener listner) {
-		this.listner = listner;
-	}
-
-	//@Override
-	public void updateStatus(String msg, eStatusType type) {
-
-	}
 
 }

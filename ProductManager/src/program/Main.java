@@ -1,4 +1,5 @@
 package program;
+import controller.Controller;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import views.ProductManagerView;
@@ -11,7 +12,6 @@ public class Main extends Application{
 
 	@Override
 	public void start(Stage mainStage) throws Exception {
-		ProductManagerView view = new ProductManagerView(mainStage, true);
+		Controller controller = new Controller(new ProductManagerView(mainStage, false));
 	}
-
 }
