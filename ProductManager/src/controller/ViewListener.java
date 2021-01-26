@@ -1,7 +1,6 @@
 package controller;
 
-import models.eNums.eSortType;
-
+import common.*;
 public interface ViewListener {
 	/**
 	 * 
@@ -10,7 +9,7 @@ public interface ViewListener {
 	 * 		eLexDESC
 	 * 		eInsert
 	 */
-	void viewUpdateSortType(eSortType sortType);
+	void viewUpdateSortType(SortType sortType);
 	/**
 	 * undo last insertion
 	 */
@@ -37,4 +36,33 @@ public interface ViewListener {
 	 * @return A String that contain all the customers
 	 */
 	String viewAskForShowCustomers();
+	/**
+	 * @return all the promoted customers
+	 * 
+	 * @param promotion
+	 * 		promotion->msg to be sent to all promoted customers
+	 */
+	String viewAskForUpdatePromotion(String promotion);
+	/**
+	 * @return true if the product exists
+	 * @param ID
+	 * product id to be searched
+	 */
+	boolean viewAskForSearchProduct(String ID);
+	/**
+	 * @return product toString
+	 * @param ID
+	 * product id to be searched
+	 */
+	String viewAskForShowProduct(String ID);
+	/**
+	 * @param ID
+	 * product id to be searched
+	 * delete this product
+	 */
+	void viewAskToDeleteProduct(String ID);
+	/**
+	 * Delete all the content in the model
+	 */
+	void viewAskToDeleteAll();
 }

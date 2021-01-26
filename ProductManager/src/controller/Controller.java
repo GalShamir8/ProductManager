@@ -1,51 +1,80 @@
 package controller;
 
-import models.eNums.eSortType;
-import models.eNums.eStatusType;
+import common.*;
+import modelCommands.ModelCommand;
+import modelCommands.ModelCommandable;
+import models.Manager;
 import views.ProductManagerViewable;
 
-public class Controller implements ViewListener{
+public class Controller implements ViewListener, ModelListener{
 	private ProductManagerViewable view;
+	private ModelCommandable allCommands;
 
-	//temp c'tor
-	public Controller(ProductManagerViewable view /*, model*/) {
+	//c'tor
+	public Controller(ProductManagerViewable view) {
 		//View
 		this.view = view;
-		view.registerListener(this);
-		/*
-		 * model
-		 */
-
+		this.view.registerListener(this);
+		//Model
+		this.allCommands = new ModelCommand(Manager.getInstance());
+		this.allCommands.registerListener(this);
 	}
-
+	
 	@Override
-	public void viewUpdateSortType(eSortType sortType) {
-		//Test
-		view.updateStatus("succsess", eStatusType.eSuccess);
+	public void viewUpdateSortType(SortType sortType) {
+		allCommands.updateSortType(sortType);
 	}
 
 	@Override
 	public void viewAskForUndo() {
-		// TODO Auto-generated method stub
-
+		allCommands.undo();
 	}
 
 	@Override
 	public void viewAskToAddProduct(String pId, String pName, String pPriceCost, String pPriceSell, 
 			String cName, String cPhone, boolean cPromotion) {
-		// TODO Auto-generated method stub
-
+		allCommands.addProduct(pId, pName, pPriceCost, pPriceSell, cName, cPhone, cPromotion);
 	}
 
 	@Override
 	public String viewAskForShowProducts() {
-		// TODO Auto-generated method stub
-		return null;
+		return allCommands.showProducts();
 	}
 
 	@Override
 	public String viewAskForShowCustomers() {
-		// TODO Auto-generated method stub
-		return null;
+		return allCommands.showCustomers();
 	}
+
+	@Override
+	public void modelUpdateStatus(String status, StatusType statusType, boolean visibleFlag) {
+		this.view.updateStatus(status, statusType, visibleFlag);
+	}
+
+	@Override
+	public String viewAskForUpdatePromotion(String promotion) {
+		return "";
+		//return allCommands.SendPromotion();
+	}
+
+	@Override
+	public boolean viewAskForSearchProduct(String ID) {
+		return allCommands.searchProduct(ID);
+	}
+
+	@Override
+	public String viewAskForShowProduct(String ID) {
+		return allCommands.showProduct(ID);
+	}
+
+	@Override
+	public void viewAskToDeleteProduct(String ID) {
+		allCommands.deleteProduct(ID);
+	}
+
+	@Override
+	public void viewAskToDeleteAll() {
+		allCommands.deleteAll();
+	}
+
 }
