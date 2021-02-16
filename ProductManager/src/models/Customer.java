@@ -1,8 +1,10 @@
 package models;
 
+import java.io.Serializable;
+
 import observers.CustomerObserverable;
 
-public class Customer implements CustomerObserverable{
+public class Customer implements CustomerObserverable {
 
 	private String name;
 	private String phone;
@@ -64,7 +66,7 @@ public class Customer implements CustomerObserverable{
 	
 	@Override
 	public String toString() {
-		return "Customer: " + name + "\tPhone number: " + phone;
+		return "Customer name: " + name.toUpperCase() + "\t Phone number: " + phone;
 	}
 
 

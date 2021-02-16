@@ -19,7 +19,7 @@ public class Controller implements ViewListener, ModelListener{
 		this.allCommands = new ModelCommand(Manager.getInstance());
 		this.allCommands.registerListener(this);
 	}
-	
+
 	@Override
 	public void viewUpdateSortType(SortType sortType) {
 		allCommands.updateSortType(sortType);
@@ -53,8 +53,7 @@ public class Controller implements ViewListener, ModelListener{
 
 	@Override
 	public String viewAskForUpdatePromotion(String promotion) {
-		return "";
-		//return allCommands.SendPromotion();
+		return allCommands.SendPromotion();
 	}
 
 	@Override
@@ -75,6 +74,16 @@ public class Controller implements ViewListener, ModelListener{
 	@Override
 	public void viewAskToDeleteAll() {
 		allCommands.deleteAll();
+	}
+
+	@Override
+	public String viewAskForShowProfit() {
+		return allCommands.showProfit();
+	}
+
+	@Override
+	public int viewAskForNumOfPromoted() {
+		return allCommands.getNumOfPromoted();
 	}
 
 }

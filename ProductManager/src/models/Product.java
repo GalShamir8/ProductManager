@@ -1,10 +1,12 @@
 package models;
 
+
 public class Product {
 	private final String defaultName = "Blank";
 	private final int defaultPrice = 10;
 	private Exception priceException = new Exception("Illegal price:\nPrice can not be negative");
 
+	private String productId;
 	private String name;
 	private int costPrice;
 	private int sellPrice;
@@ -17,11 +19,22 @@ public class Product {
 	 * @param sellPrice
 	 * @throws Exception 
 	 */
-	public Product(String name, String costPrice, String sellPrice, Customer customer) throws Exception {
+	public Product(String productId,String name, String costPrice, String sellPrice, Customer customer ) throws Exception {
+		setId(productId);
 		setName(name);
 		setCostPrice(costPrice);
 		setSellPrice(sellPrice);
 		this.customer = customer;
+	}
+	/**
+	 * 
+	 * @param productId2
+	 * @throws Exception 
+	 */
+	private void setId(String productId) throws Exception {
+		if(productId.isBlank())
+			throw new Exception("Product id can not be empty");
+		this.productId = productId;
 	}
 	/**
 	 * 
@@ -80,6 +93,10 @@ public class Product {
 		}
 	}
 	
+	public String getId() {
+		return productId;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -95,9 +112,9 @@ public class Product {
 	public Customer getCustomer() {
 		return customer;
 	}
-
+	
 	@Override
 	public String toString(){
-		return name + ", Cost price: " + costPrice + ", Sell price: " + sellPrice;
+		return name + ", Cost price: " + costPrice + ", Sell price: " + sellPrice + ", Profit: " + (sellPrice - costPrice);
 	}
 }

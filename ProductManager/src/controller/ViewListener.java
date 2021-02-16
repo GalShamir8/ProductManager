@@ -65,4 +65,14 @@ public interface ViewListener {
 	 * Delete all the content in the model
 	 */
 	void viewAskToDeleteAll();
+	/**
+	 * 
+	 * @return all product profit
+	 */
+	String viewAskForShowProfit();
+	/**
+	 * 
+	 * @return num of customers promoted
+	 */
+	int viewAskForNumOfPromoted();
 }

@@ -9,25 +9,24 @@ import observers.CustomerObserverable;
 
 public class ManagerMemento {
 
-	private Manager manager;
-	private TreeMap<String, Product> allProducts = new TreeMap<>();
-	private ArrayList<CustomerObserverable> observers = new ArrayList<>();
+	private TreeMap<String, Product> allProducts;
+	private ArrayList<CustomerObserverable> observers;
 
+	@SuppressWarnings("unchecked")
 	public ManagerMemento(Manager manager) {
-		this.manager = manager;
+		if(manager.getAllProducts() != null && manager.getObservers() != null) {
+			this.allProducts = (TreeMap<String, Product>) manager.getAllProducts().clone();
+			this.observers = (ArrayList<CustomerObserverable>) manager.getObservers().clone();
+		}
 	}
 
-	public ManagerMemento save() {
-		return new ManagerMemento(this.manager);
+	public ManagerMemento save(Manager manager) {
+		return new ManagerMemento(manager);
 	}
 
-	public void load(ManagerMemento lastInsert) {
-		this.manager.setAllProduct(lastInsert.allProducts);
-		this.manager.setObservers(lastInsert.observers);
-		//manager.saveToFile();
+	public void load() {
+		Manager.getInstance().setAllProduct(allProducts);
+		Manager.getInstance().setObservers(observers);
 	}
 
-	public Manager getManager() {
-		return manager;
-	}
 }

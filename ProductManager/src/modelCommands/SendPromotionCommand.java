@@ -9,8 +9,8 @@ public class SendPromotionCommand {
 		 this.manager = manager;
 	}
 	 
-	 public void execute() {
-		 manager.SendPromotion();
+	 public String execute() {
+		return manager.SendPromotion();
 	 }
 	 
 }

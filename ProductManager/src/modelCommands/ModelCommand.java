@@ -19,6 +19,8 @@ public class ModelCommand implements ModelCommandable{
 	private ShowProductCommand showProductCommand;
 	private DeleteProductCommand deleteProductCommand;
 	private DeleteAllCommand deleteAllCommand;
+	private ShowProfitCommand showProfitCommand; 
+	private GetPromotedCommand getPromotedCommand;
 	
 	
 	public ModelCommand(Manager manager) {
@@ -33,6 +35,8 @@ public class ModelCommand implements ModelCommandable{
 		this.showProductCommand = new ShowProductCommand(manager);
 		this.deleteProductCommand = new DeleteProductCommand(manager);
 		this.deleteAllCommand = new DeleteAllCommand(manager);
+		this.showProfitCommand = new ShowProfitCommand(manager);
+		this.getPromotedCommand = new GetPromotedCommand(manager);
 		
 	}
 	
@@ -68,8 +72,8 @@ public class ModelCommand implements ModelCommandable{
 	}
 
 	@Override
-	public void SendPromotion() {
-		sendPromotionCommand.execute();
+	public String SendPromotion() {
+		return sendPromotionCommand.execute();
 	}
 
 	@Override
@@ -90,6 +94,16 @@ public class ModelCommand implements ModelCommandable{
 	@Override
 	public void deleteAll() {
 		deleteAllCommand.execute();
+	}
+
+	@Override
+	public String showProfit() {
+		return showProfitCommand.execute();
+	}
+
+	@Override
+	public int getNumOfPromoted() {
+		return getPromotedCommand.execute();
 	}
 
 }

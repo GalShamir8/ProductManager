@@ -29,8 +29,6 @@ public interface ProductManagerViewable {
 	 */
 	void undoLastInsertion();
 
-	void registerListener(ViewListener listner);
-
 	/**
 	 * updates the status; msg by eStatusType
 	 * visible case->if there is need to leave the middle window as is
@@ -41,7 +39,10 @@ public interface ProductManagerViewable {
 	 * Sending promotion to assign customers
 	 */
 	void customerPromotion();
-
+	/**
+	 * Show the profit of the store from all the product that been sell
+	 */
+	void showProfit();
 	/**
 	 * Searching a product by his id
 	 */
@@ -50,5 +51,8 @@ public interface ProductManagerViewable {
 	 * Delete all the content
 	 */
 	void deleteAll();
+	
+	void registerListener(ViewListener listner);
+
 
 }

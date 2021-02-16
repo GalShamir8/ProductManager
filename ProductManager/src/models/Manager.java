@@ -1,7 +1,12 @@
 package models;
 
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
@@ -15,7 +20,7 @@ import modelCommands.ModelCommandable;
 import observers.CustomerObserverable;
 import program.Main;
 
-public class Manager implements ModelCommandable {
+public class Manager implements ModelCommandable, Iterable<Product> {
 
 	private static Manager manager = new Manager();
 
@@ -24,6 +29,8 @@ public class Manager implements ModelCommandable {
 	private ArrayList<CustomerObserverable> observers;
 
 	private ManagerMemento lastInsert;
+	//last Insert product
+	private Product productToRemove = null;
 
 	private Manager() {
 		this.observers = new ArrayList<>();
@@ -37,17 +44,20 @@ public class Manager implements ModelCommandable {
 	public void addProduct(String pId, String pName, String pPriceCost, String pPriceSell, String cName, String cPhone,
 			boolean cPromotion) {
 		try {
-			this.lastInsert = lastInsert.save();
+			
 			Customer customer = new Customer(cName, cPhone, cPromotion);
-			Product product = new Product(pName, pPriceCost, pPriceSell, customer);
+			Product product = new Product(pId, pName, pPriceCost, pPriceSell, customer);
 
+			// Backup last insert
+			this.lastInsert = lastInsert.save(this);
+			productToRemove = product;
+			
 			allProducts.put(pId, product);
 
 			if (customer.isPromoted())
 				this.observers.add(customer);
-			// Backup last insert
 
-			saveToFile();
+			saveToFile(product);
 
 			listener.modelUpdateStatus("Product added", StatusType.eSuccess, false);
 
@@ -70,9 +80,16 @@ public class Manager implements ModelCommandable {
 	}
 
 	public void undo() {
-		lastInsert.load(lastInsert);
+		lastInsert.load();
+		this.lastInsert = lastInsert.save(this);
+		try {
+			if(productToRemove != null)
+				removeFromFile(productToRemove.getId());
 		listener.modelUpdateStatus("restored to last insertion", StatusType.eSuccess, false);
-		this.lastInsert = lastInsert.save();
+		
+		}catch(Exception e) {
+			listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+		}
 	}
 
 	public void registerListener(ModelListener listener) {
@@ -111,8 +128,18 @@ public class Manager implements ModelCommandable {
 	}
 
 	@Override
-	public void SendPromotion() {
-
+	public String SendPromotion() {
+		StringBuilder sb = new StringBuilder();
+		for(CustomerObserverable o : observers) {
+			sb.append(o.update() + "\n");
+		}
+		
+		return sb.toString();
+	}
+	
+	@Override
+	public int getNumOfPromoted() {
+		return observers.size();
 	}
 
 	@Override
@@ -140,22 +167,47 @@ public class Manager implements ModelCommandable {
 	}
 
 	@Override
-	public void deleteProduct(String ID) {
-		this.lastInsert = lastInsert.save();
-		Product temp = allProducts.remove(ID);
-		// removeFromFile(ID);
+	public String showProfit() {
+		int profit = 0;
+		if (allProducts != null) {
+			Set<Entry<String, Product>> allEntries = allProducts.entrySet();
 
+			for (Entry<String, Product> e : allEntries) {
+				profit += (e.getValue().getSellPrice() - e.getValue().getCostPrice());
+			}
+		}
+
+		return "All products profit: " + Integer.toString(profit);
+	}
+
+	@Override
+	public void deleteProduct(String ID) {
+		this.lastInsert = lastInsert.save(this);
+		Product temp = allProducts.remove(ID);
 		if (temp == null)
 			listener.modelUpdateStatus("Product not found", StatusType.eError, false);
-		else
-			listener.modelUpdateStatus("Product removed", StatusType.eSuccess, false);
+		else {
+			if(temp.getCustomer().isPromoted())
+				observers.remove(temp.getCustomer());
+
+			try {
+				removeFromFile(ID);
+				listener.modelUpdateStatus("Product removed", StatusType.eSuccess, false);
+			} catch (Exception e) {
+				listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+			}	
+		}
 	}
 
 	@Override
 	public void deleteAll() {
 		if (allProducts != null) {
 			allProducts.clear();
-			// removeFromFile(); id == null remove all
+			try {
+				removeFromFile(null);
+			} catch (Exception e) {
+				listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+			}
 		}
 
 		if (observers != null)
@@ -178,9 +230,174 @@ public class Manager implements ModelCommandable {
 		this.observers = observers;
 	}
 
-	public void saveToFile() {
-		File file = new File(Main.FILE_NAME);
-
+	public void saveToFile(Product p) throws Exception {
+		FileIterator it = (FileIterator) iterator();
+		it.save(p);
 	}
 
+	/**
+	 * 
+	 * @param productID if productId == null -> delete all
+	 * @throws Exception
+	 */
+	private void removeFromFile(String productID) throws Exception {
+		FileIterator it = (FileIterator) iterator();
+
+		if (productID == null) {
+			Set<Entry<String, Product>> products = allProducts.entrySet();
+			for (Entry<String, Product> e : products) {
+				it.remove(e.getKey());
+			}
+		} else {
+			it.remove(productID);
+		}
+	}
+
+	public void readFromFile() {
+		FileIterator it = (FileIterator)iterator();
+		while(it.hasNext()) {
+			Product p = it.next();
+			allProducts.put(p.getId(), p);
+			
+			if(p.getCustomer().isPromoted()) 
+				observers.add(p.getCustomer());
+		}
+	}
+
+	@Override
+	public Iterator<Product> iterator() {
+		try {
+			return new FileIterator();
+		} catch (Exception e) {
+			listener.modelUpdateStatus("Error in file", StatusType.eError, false);
+		}
+		return null;
+	}
+
+
+	public class FileIterator implements Iterator<Product> {
+		private Exception fileError = new Exception("Error in file");
+
+		private File file;
+
+		private RandomAccessFile raf;
+
+		int numOfProducts;
+		int currentIndex = 0;
+
+		public FileIterator() throws Exception {
+			this.file = new File(Main.FILE_NAME);
+
+			this.raf = new RandomAccessFile(file, "rw");
+
+			setNumOfProducts();
+
+		}
+
+		private void setNumOfProducts() throws Exception {
+			if (raf.length() > 0) {
+				try {
+					numOfProducts = raf.readInt();
+				} catch (Exception e) {
+					throw fileError;
+				}
+			} else
+				this.numOfProducts = 0;
+
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentIndex < numOfProducts;
+		}
+
+		@Override
+		public Product next(){
+			if(hasNext()){
+				try {
+					try {
+						//Product fields
+						String pid = raf.readUTF();
+						String pName = raf.readUTF();
+						String costPrice = raf.readUTF();
+						String sellPrice = raf.readUTF();
+
+						//Customer fields
+						String cName = raf.readUTF();
+						String cPhone = raf.readUTF();
+						boolean isPromoted = raf.readBoolean();
+
+						Customer customer = new Customer(cName, cPhone, isPromoted);
+						Product product = new Product(pid, pName, costPrice, sellPrice, customer);
+						
+						currentIndex++;
+						
+						return product;
+					} catch (Exception e) {
+						listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+					}
+
+				}catch (NoSuchElementException e) {
+					throw new NoSuchElementException();
+				}
+			}
+			return null;
+		}
+
+		public Product remove(String productId) throws Exception {
+			while(hasNext()) {
+				try {
+					//pointer of start product
+					long startIndex = raf.getFilePointer();
+					//the next product in file
+					Product p = next();
+
+					if(p.getId().equals(productId)) {
+						//bytes array in the size of all the rest data
+						byte [] data = new byte[(int)(raf.length()-raf.getFilePointer())]; 
+
+						raf.read(data);
+						raf.seek(startIndex);
+
+						//override the product we want to delete
+						raf.write(data);
+
+						//trim the file
+						raf.setLength(raf.getFilePointer());
+
+						//update the new numOfProducts
+						raf.seek(0);
+						raf.writeInt(allProducts.size());
+						numOfProducts = allProducts.size();
+
+						return p;
+					}
+
+				}catch(Exception e) {
+					throw fileError;
+				}
+			}
+			return null;
+		}
+
+		public void save(Product p) throws Exception {
+			//write new size
+			raf.seek(0);
+			raf.writeInt(allProducts.size());
+			raf.seek(raf.length());
+
+			//Product fields
+			raf.writeUTF(p.getId());
+			raf.writeUTF(p.getName());
+			raf.writeUTF(Integer.toString(p.getCostPrice()));
+			raf.writeUTF(Integer.toString(p.getSellPrice()));
+
+			//Customer fields
+			Customer c = p.getCustomer();
+			raf.writeUTF(c.getName());
+			raf.writeUTF(c.getPhone());
+			raf.writeBoolean(c.isPromoted());
+		}
+
+	}
 }

@@ -19,7 +19,7 @@ public class GpAddProduct extends GridPane {
 	private Label lblPpriceCost = new Label("Enter product cost:");
 	private Label lblPpriceSell = new Label("Enter product sell price:");
 	private Label lblCname = new Label("Enter customer name:");
-	private Label lblCPhone = new Label("Enter customer phone");
+	private Label lblCPhone = new Label("Enter customer phone:");
 	private Label lblCpromtion = new Label("Would you like to get promotion?");
 
 	// Text field

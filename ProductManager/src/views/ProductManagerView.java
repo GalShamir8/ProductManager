@@ -27,6 +27,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import models.Manager;
 
 public class ProductManagerView implements ProductManagerViewable {
 	// view Listener
@@ -49,12 +50,14 @@ public class ProductManagerView implements ProductManagerViewable {
 	private Button btnShowAllCustomers = new Button("Show all customers");
 	private Button btnSendPromotion = new Button("Send promotion");
 	private Button btnSearchProduct = new Button("Search product");
-	private Button btnDeleteAll = new Button("Delete all");
 	private Button btnUndo = new Button("Undo last insert");
+	private Button btnShowProfit = new Button("Show profit");
+	private Button btnDeleteAll = new Button("Delete all");
 
 	// Labels
 	private Label lblStatus = new Label("Status:");
 	private Label lblStatusDescription = new Label();
+	private Label lblShowProfit = new Label();
 
 	/*
 	 * Constructor sortFlag = true: if there is data in file false: if the file is
@@ -70,7 +73,8 @@ public class ProductManagerView implements ProductManagerViewable {
 		btnSendPromotion.setPrefSize(120, 10);
 		btnSearchProduct.setPrefSize(120, 10);
 		btnDeleteAll.setPrefSize(120, 10);
-		btnUndo.setPrefSize(120, 10);;
+		btnUndo.setPrefSize(120, 10);
+		btnShowProfit.setPrefSize(120, 10);
 
 		initRoot(sortFlag);
 
@@ -119,7 +123,7 @@ public class ProductManagerView implements ProductManagerViewable {
 
 		// Adding nodes
 		vbLeft.getChildren().addAll(btnAddProduct, btnShowAllProducts, btnShowAllCustomers, btnSendPromotion,
-				btnSearchProduct, btnUndo, lblStatus, lblStatusDescription, btnDeleteAll);
+				btnSearchProduct,btnShowProfit, btnUndo, lblStatus, lblStatusDescription, btnDeleteAll);
 
 		// At first status is empty
 		setStatusDescriptionVisible(false);
@@ -130,8 +134,9 @@ public class ProductManagerView implements ProductManagerViewable {
 		btnShowAllCustomers.setOnAction(e -> showAllCustomers());
 		btnSendPromotion.setOnAction(e -> customerPromotion());
 		btnSearchProduct.setOnAction(e -> searchProduct());
-		btnDeleteAll.setOnAction(e -> deleteAll());
+		btnShowProfit.setOnAction(e->showProfit());
 		btnUndo.setOnAction(e->undoLastInsertion());
+		btnDeleteAll.setOnAction(e -> deleteAll());
 
 		bpRoot.setLeft(vbLeft);
 	}
@@ -159,19 +164,17 @@ public class ProductManagerView implements ProductManagerViewable {
 		HBox hbSort = new HBox();
 
 		// add all nodes
-		spMiddleRoot.getChildren().addAll(hbSort, gpProduct, scpProduct, scpCustomer, vbPromotion, vbSearchProduct);
+		spMiddleRoot.getChildren().addAll(hbSort, gpProduct, scpProduct, scpCustomer, vbPromotion, vbSearchProduct, lblShowProfit);
 
 		// Visibility children
 		setMiddleVisibile(false);
 
-		// open only if file that holds data is empty
-		if (!sortFlag)
-			checkSort(hbSort);
+		checkSort(hbSort, sortFlag);
 
 		bpRoot.setCenter(spMiddleRoot);
 	}
 
-	public void checkSort(HBox hbSort) {
+	public void checkSort(HBox hbSort, boolean sortFlag) {
 		setLeftDisable(true);
 		hbSort.setVisible(true);
 
@@ -192,6 +195,9 @@ public class ProductManagerView implements ProductManagerViewable {
 
 		btnEnter.setOnAction(e -> {
 			listener.viewUpdateSortType(SortType.values()[cbSort.getSelectionModel().getSelectedIndex()]);
+
+			if(sortFlag)
+				Manager.getInstance().readFromFile();
 
 			hbSort.setVisible(false);
 			setLeftDisable(false);
@@ -243,7 +249,7 @@ public class ProductManagerView implements ProductManagerViewable {
 	@Override
 	public void undoLastInsertion() {
 		setMiddleVisibile(false);
-		
+
 		listener.viewAskForUndo();
 	}
 
@@ -268,9 +274,37 @@ public class ProductManagerView implements ProductManagerViewable {
 		hbPromotion.setAlignment(Pos.CENTER_LEFT);
 
 		btnEnterPromotion.setOnAction(e -> {
-			listener.viewAskForUpdatePromotion(tfSendPromotion.getText());
-		});
+			String output = listener.viewAskForUpdatePromotion(tfSendPromotion.getText());
+			String[] allLablesText = output.split("\n");
 
+			int numOfLabels = listener.viewAskForNumOfPromoted();
+			Label [] labels = new Label[numOfLabels];
+			
+			VBox vbAllLabels = new VBox();
+			
+			for(int i = 0 ; i < labels.length; i++) {
+				labels[i] = new Label(allLablesText[i]);
+				labels[i].setVisible(false);
+				vbAllLabels.getChildren().add(labels[i]);
+			}
+			scpPromotion.setContent(vbAllLabels);
+
+
+			Thread t = new Thread(()->{
+				try {
+					for(Label l : labels) {
+						Thread.sleep(2000);
+						
+						Platform.runLater(()->{
+							l.setVisible(true);
+						});
+					}
+				}catch(Exception d) {
+					updateStatus(d.getMessage(), StatusType.eError, false);
+				}
+			});
+			t.start();
+		});
 	}
 
 	@Override
@@ -313,6 +347,22 @@ public class ProductManagerView implements ProductManagerViewable {
 			}
 		});
 	}
+
+	@Override
+	public void showProfit() {
+		setMiddleVisibile(false);
+		setLblShowProfitVisible(true);
+
+		//Design
+		lblShowProfit.setFont(new Font("Tahoma",15));
+		lblShowProfit.setTextFill(Color.BLUE);
+		lblShowProfit.setAlignment(Pos.TOP_LEFT);
+
+
+		lblShowProfit.setText(listener.viewAskForShowProfit());
+
+	}
+
 
 	private void deleteProduct(String id) {
 		listener.viewAskToDeleteProduct(id);
@@ -378,10 +428,15 @@ public class ProductManagerView implements ProductManagerViewable {
 		setStatusDescriptionVisible(visible);
 		setVbPromotionVisible(visible);
 		setVbSearchProductVisible(visible);
+		setLblShowProfitVisible(visible);
 	}
 
 	private void setLeftDisable(boolean disable) {
 		bpRoot.getLeft().setDisable(disable);
+	}
+
+	private void setLblShowProfitVisible(boolean visible) {
+		lblShowProfit.setVisible(visible);
 	}
 
 	private void setGpProductVisible(boolean visible) {

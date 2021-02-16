@@ -30,7 +30,7 @@ public interface ModelCommandable {
 	
 	void registerListener(ModelListener controller);
 
-	void SendPromotion();
+	String SendPromotion();
 
 	boolean searchProduct(String ID);
 
@@ -39,4 +39,8 @@ public interface ModelCommandable {
 	void deleteProduct(String ID);
 
 	void deleteAll();
+
+	String showProfit();
+
+	int getNumOfPromoted();
 }
