@@ -1,8 +1,6 @@
 package modelCommands;
 
 import common.SortType;
-import common.StatusType;
-import controller.Controller;
 import controller.ModelListener;
 import models.Manager;
 

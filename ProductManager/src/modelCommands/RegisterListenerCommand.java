@@ -1,6 +1,5 @@
 package modelCommands;
 
-import controller.Controller;
 import controller.ModelListener;
 import models.Manager;
 

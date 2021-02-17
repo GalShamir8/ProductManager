@@ -12,6 +12,7 @@ public class Main extends Application{
 		launch(args);
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	public void start(Stage mainStage) throws Exception {
 		File file = new File(FILE_NAME);

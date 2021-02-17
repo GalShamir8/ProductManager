@@ -3,6 +3,12 @@ package controller;
 import common.StatusType;
 
 public interface ModelListener {
-
-	void modelUpdateStatus(String status, StatusType statusType, boolean visibleFlag);
+	/**
+	 * 
+	 * @param status
+	 * @param statusType
+	 * 
+	 * update the status in the view
+	 */
+	void modelUpdateStatus(String status, StatusType statusType);
 }

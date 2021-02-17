@@ -2,10 +2,6 @@ package common;
 
 import java.util.Comparator;
 
-/**
- * @author galsh
- */
-
 public class OrderByInsert implements Comparator<String>{
 
 	/*

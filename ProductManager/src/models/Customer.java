@@ -1,15 +1,14 @@
 package models;
 
-import java.io.Serializable;
-
 import observers.CustomerObserverable;
 
 public class Customer implements CustomerObserverable {
+	private final String defaultName = "Blank";
 
 	private String name;
 	private String phone;
 	private boolean isPromoted;
-	
+
 	/**
 	 * 
 	 * @param name
@@ -22,7 +21,7 @@ public class Customer implements CustomerObserverable {
 		setPhone(phone);
 		this.isPromoted = isPromoted;
 	}
-		
+
 
 	public String getName() {
 		return name;
@@ -41,7 +40,7 @@ public class Customer implements CustomerObserverable {
 	 * @throws Exception
 	 */
 	private void setPhone(String phone) throws Exception {
-		if(phone.length() < 10 || phone.length() < 9)
+		if(phone.length() > 10 || phone.length() < 9)
 			throw new Exception("Illegal phone number:\nphone must contains 9-10 digits");
 		try {
 			Integer.parseInt(phone);
@@ -58,17 +57,21 @@ public class Customer implements CustomerObserverable {
 	 * @throws Exception
 	 */
 	private void setName(String name) throws Exception {
-		if(!(name.chars().allMatch(Character::isLetter)))
-			throw new Exception("Invalid name:\nName must contains only letters");
-		else
+		if(name.isBlank())
+			name = defaultName;
+		else {
+			for(int i = 0 ; i < name.length(); i++) {
+				if(!Character.isAlphabetic(name.charAt(i)) || !Character.isWhitespace(name.charAt(i)))
+					throw new Exception("Invalid Customer name:\nName must contains only letters");
+			}
 			this.name = name;
+		}
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Customer name: " + name.toUpperCase() + "\t Phone number: " + phone;
 	}
-
 
 	@Override
 	public String update() {

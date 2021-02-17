@@ -47,8 +47,8 @@ public class Controller implements ViewListener, ModelListener{
 	}
 
 	@Override
-	public void modelUpdateStatus(String status, StatusType statusType, boolean visibleFlag) {
-		this.view.updateStatus(status, statusType, visibleFlag);
+	public void modelUpdateStatus(String status, StatusType statusType) {
+		this.view.updateStatus(status, statusType);
 	}
 
 	@Override

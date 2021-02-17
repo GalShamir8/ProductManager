@@ -1,6 +1,7 @@
 package models;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -44,14 +45,14 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 	public void addProduct(String pId, String pName, String pPriceCost, String pPriceSell, String cName, String cPhone,
 			boolean cPromotion) {
 		try {
-			
+
 			Customer customer = new Customer(cName, cPhone, cPromotion);
 			Product product = new Product(pId, pName, pPriceCost, pPriceSell, customer);
 
 			// Backup last insert
 			this.lastInsert = lastInsert.save(this);
 			productToRemove = product;
-			
+
 			allProducts.put(pId, product);
 
 			if (customer.isPromoted())
@@ -59,10 +60,10 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 
 			saveToFile(product);
 
-			listener.modelUpdateStatus("Product added", StatusType.eSuccess, false);
+			listener.modelUpdateStatus("Product added", StatusType.eSuccess);
 
 		} catch (Exception e) {
-			listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+			listener.modelUpdateStatus(e.getMessage(), StatusType.eError);
 		}
 	}
 
@@ -85,10 +86,10 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 		try {
 			if(productToRemove != null)
 				removeFromFile(productToRemove.getId());
-		listener.modelUpdateStatus("restored to last insertion", StatusType.eSuccess, false);
-		
+			listener.modelUpdateStatus("restored to last insertion", StatusType.eSuccess);
+
 		}catch(Exception e) {
-			listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+			listener.modelUpdateStatus(e.getMessage(), StatusType.eError);
 		}
 	}
 
@@ -133,10 +134,10 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 		for(CustomerObserverable o : observers) {
 			sb.append(o.update() + "\n");
 		}
-		
+
 		return sb.toString();
 	}
-	
+
 	@Override
 	public int getNumOfPromoted() {
 		return observers.size();
@@ -149,9 +150,9 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 			temp = allProducts.get(ID);
 
 		if (temp == null)
-			listener.modelUpdateStatus("Product not found", StatusType.eError, true);
+			listener.modelUpdateStatus("Product not found", StatusType.eError);
 		else
-			listener.modelUpdateStatus("Product found", StatusType.eSuccess, true);
+			listener.modelUpdateStatus("Product found", StatusType.eSuccess);
 
 		return temp != null;
 	}
@@ -185,16 +186,16 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 		this.lastInsert = lastInsert.save(this);
 		Product temp = allProducts.remove(ID);
 		if (temp == null)
-			listener.modelUpdateStatus("Product not found", StatusType.eError, false);
+			listener.modelUpdateStatus("Product not found", StatusType.eError);
 		else {
 			if(temp.getCustomer().isPromoted())
 				observers.remove(temp.getCustomer());
 
 			try {
 				removeFromFile(ID);
-				listener.modelUpdateStatus("Product removed", StatusType.eSuccess, false);
+				listener.modelUpdateStatus("Product removed", StatusType.eSuccess);
 			} catch (Exception e) {
-				listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+				listener.modelUpdateStatus(e.getMessage(), StatusType.eError);
 			}	
 		}
 	}
@@ -202,11 +203,11 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 	@Override
 	public void deleteAll() {
 		if (allProducts != null) {
-			allProducts.clear();
 			try {
 				removeFromFile(null);
+				allProducts.clear();
 			} catch (Exception e) {
-				listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+				listener.modelUpdateStatus(e.getMessage(), StatusType.eError);
 			}
 		}
 
@@ -244,10 +245,19 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 		FileIterator it = (FileIterator) iterator();
 
 		if (productID == null) {
-			Set<Entry<String, Product>> products = allProducts.entrySet();
-			for (Entry<String, Product> e : products) {
-				it.remove(e.getKey());
-			}
+			allProducts.forEach(new BiConsumer<String, Product>() {
+
+				@Override
+				public void accept(String key, Product value) {
+					try {
+						it.remove(key);
+					} catch (Exception e) {
+						listener.modelUpdateStatus(e.getMessage(), StatusType.eError);
+					}
+				}
+			});
+			it.clean();
+
 		} else {
 			it.remove(productID);
 		}
@@ -258,7 +268,7 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 		while(it.hasNext()) {
 			Product p = it.next();
 			allProducts.put(p.getId(), p);
-			
+
 			if(p.getCustomer().isPromoted()) 
 				observers.add(p.getCustomer());
 		}
@@ -269,7 +279,7 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 		try {
 			return new FileIterator();
 		} catch (Exception e) {
-			listener.modelUpdateStatus("Error in file", StatusType.eError, false);
+			listener.modelUpdateStatus("Error in file", StatusType.eError);
 		}
 		return null;
 	}
@@ -329,12 +339,12 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 
 						Customer customer = new Customer(cName, cPhone, isPromoted);
 						Product product = new Product(pid, pName, costPrice, sellPrice, customer);
-						
+
 						currentIndex++;
-						
+
 						return product;
 					} catch (Exception e) {
-						listener.modelUpdateStatus(e.getMessage(), StatusType.eError, false);
+						listener.modelUpdateStatus(e.getMessage(), StatusType.eError);
 					}
 
 				}catch (NoSuchElementException e) {
@@ -399,5 +409,12 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 			raf.writeBoolean(c.isPromoted());
 		}
 
+		/**
+		 * clean all the fields in the file
+		 * @throws IOException 
+		 */
+		public void clean() throws IOException {
+			raf.setLength(0);
+		}
 	}
 }

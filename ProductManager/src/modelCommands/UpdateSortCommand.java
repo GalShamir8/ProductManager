@@ -1,7 +1,6 @@
 package modelCommands;
 
 import common.SortType;
-import common.StatusType;
 import models.Manager;
 
 public class UpdateSortCommand {

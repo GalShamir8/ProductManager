@@ -3,7 +3,7 @@ package models;
 
 public class Product {
 	private final String defaultName = "Blank";
-	private final int defaultPrice = 10;
+	private final int defaultPrice = 0;
 	private Exception priceException = new Exception("Illegal price:\nPrice can not be negative");
 
 	private String productId;
@@ -34,6 +34,7 @@ public class Product {
 	private void setId(String productId) throws Exception {
 		if(productId.isBlank())
 			throw new Exception("Product id can not be empty");
+		
 		this.productId = productId;
 	}
 	/**
@@ -43,14 +44,17 @@ public class Product {
 	 */
 	private void setName(String name) throws Exception {
 		if(name.isBlank())
-			this.name = defaultName;
+			name = defaultName;
 		else {
-			if(!(name.chars().allMatch(Character::isLetter)))
-				throw new Exception("Invalid name:\nName must contains only letters");
-			else
-				this.name = name;
+			for(int i = 0 ; i < name.length(); i++) {
+				if(!Character.isAlphabetic(name.charAt(i)) || !Character.isWhitespace(name.charAt(i)))
+					throw new Exception("Invalid Product name:\nName must contains only letters");
+			}
+
+			this.name = name;
 		}
 	}
+
 	/**
 	 * 
 	 * @param costPrice
@@ -65,7 +69,7 @@ public class Product {
 					this.costPrice = Integer.parseInt(costPrice);
 				else
 					throw priceException;
-					
+
 			}catch(Exception e) {
 				throw new Exception("Illegal price:\nPrice must contains only digits");
 			}
@@ -86,13 +90,13 @@ public class Product {
 					this.sellPrice = Integer.parseInt(sellPrice);
 				else
 					throw priceException;
-					
+
 			}catch(Exception e) {
 				throw new Exception("Illegal price:\nPrice must contains only digits");
 			}
 		}
 	}
-	
+
 	public String getId() {
 		return productId;
 	}
@@ -100,19 +104,19 @@ public class Product {
 	public String getName() {
 		return name;
 	}
-	
+
 	public int getCostPrice() {
 		return costPrice;
 	}
-	
+
 	public int getSellPrice() {
 		return sellPrice;
 	}
-	
+
 	public Customer getCustomer() {
 		return customer;
 	}
-	
+
 	@Override
 	public String toString(){
 		return name + ", Cost price: " + costPrice + ", Sell price: " + sellPrice + ", Profit: " + (sellPrice - costPrice);

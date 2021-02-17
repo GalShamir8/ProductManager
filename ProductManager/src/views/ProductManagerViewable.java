@@ -3,11 +3,6 @@ package views;
 import common.*;
 import controller.ViewListener;
 
-/**
- * 
- * @author galsh
- *
- */
 public interface ProductManagerViewable {
 	/**
 	 * Adding a new product to our model
@@ -31,9 +26,9 @@ public interface ProductManagerViewable {
 
 	/**
 	 * updates the status; msg by eStatusType
-	 * visible case->if there is need to leave the middle window as is
+	 * 
 	 */
-	void updateStatus(String msg, StatusType type, boolean visibleCase);
+	void updateStatus(String msg, StatusType type);
 
 	/**
 	 * Sending promotion to assign customers

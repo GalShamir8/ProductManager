@@ -1,13 +1,9 @@
 package views;
 
-/**
- * @author galsh
- */
 
 import java.time.LocalDate;
 
 import common.*;
-import controller.Controller;
 import controller.ViewListener;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -17,7 +13,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
@@ -60,7 +55,7 @@ public class ProductManagerView implements ProductManagerViewable {
 	private Label lblShowProfit = new Label();
 
 	/*
-	 * Constructor sortFlag = true: if there is data in file false: if the file is
+	 * Constructor sortFlag = true: if there is data in file, false: if the file is
 	 * empty
 	 */
 	public ProductManagerView(Stage mainStage, boolean sortFlag) {
@@ -173,7 +168,12 @@ public class ProductManagerView implements ProductManagerViewable {
 
 		bpRoot.setCenter(spMiddleRoot);
 	}
-
+	/**
+	 * Aim:
+	 *  to get from the user the type of sorting requested
+	 * @param hbSort
+	 * @param sortFlag
+	 */
 	public void checkSort(HBox hbSort, boolean sortFlag) {
 		setLeftDisable(true);
 		hbSort.setVisible(true);
@@ -196,6 +196,7 @@ public class ProductManagerView implements ProductManagerViewable {
 		btnEnter.setOnAction(e -> {
 			listener.viewUpdateSortType(SortType.values()[cbSort.getSelectionModel().getSelectedIndex()]);
 
+			//if the file already contains data
 			if(sortFlag)
 				Manager.getInstance().readFromFile();
 
@@ -223,6 +224,7 @@ public class ProductManagerView implements ProductManagerViewable {
 
 			listener.viewAskToAddProduct(pId, pName, pPriceCost, pPriceSell, cName, cPhone, cPromotion);			
 			gpProduct.cleanFields();
+			setGpProductVisible(false);
 		});
 	}
 
@@ -243,7 +245,6 @@ public class ProductManagerView implements ProductManagerViewable {
 		setScpCustomerVisible(true);
 		Label output = new Label(listener.viewAskForShowCustomers());
 		scpCustomer.setContent(output);
-
 	}
 
 	@Override
@@ -289,7 +290,6 @@ public class ProductManagerView implements ProductManagerViewable {
 			}
 			scpPromotion.setContent(vbAllLabels);
 
-
 			Thread t = new Thread(()->{
 				try {
 					for(Label l : labels) {
@@ -300,7 +300,7 @@ public class ProductManagerView implements ProductManagerViewable {
 						});
 					}
 				}catch(Exception d) {
-					updateStatus(d.getMessage(), StatusType.eError, false);
+					updateStatus(d.getMessage(), StatusType.eError);
 				}
 			});
 			t.start();
@@ -358,7 +358,6 @@ public class ProductManagerView implements ProductManagerViewable {
 		lblShowProfit.setTextFill(Color.BLUE);
 		lblShowProfit.setAlignment(Pos.TOP_LEFT);
 
-
 		lblShowProfit.setText(listener.viewAskForShowProfit());
 
 	}
@@ -380,11 +379,9 @@ public class ProductManagerView implements ProductManagerViewable {
 	}
 
 	@Override
-	public void updateStatus(String msg, StatusType type, boolean visibleFlag) {
+	public void updateStatus(String msg, StatusType type) {
 		switch (type) {
 		case eSuccess:
-			setMiddleVisibile(false);
-			vbBoxVisibility(visibleFlag);
 			setStatusDescriptionVisible(true);
 			lblStatusDescription.setText(msg);
 			lblStatusDescription.setFont(new Font("Tahoma", 13));
@@ -392,27 +389,10 @@ public class ProductManagerView implements ProductManagerViewable {
 			break;
 
 		case eError:
-			setMiddleVisibile(false);
-			vbBoxVisibility(visibleFlag);
 			setStatusDescriptionVisible(true);
 			lblStatusDescription.setText(msg);
 			lblStatusDescription.setTextFill(Color.RED);
 			break;
-		}
-	}
-
-	/**
-	 * Aim to show only the current vbBox visibility
-	 * 
-	 * @param visibleFlag
-	 */
-	private void vbBoxVisibility(boolean visibleFlag) {
-		if (vbPromotion.isVisible()) {
-			setVbSearchProductVisible(!visibleFlag);
-			setVbPromotionVisible(visibleFlag);
-		} else {
-			setVbSearchProductVisible(visibleFlag);
-			setVbPromotionVisible(!visibleFlag);
 		}
 	}
 

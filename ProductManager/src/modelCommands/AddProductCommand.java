@@ -1,7 +1,6 @@
 package modelCommands;
 
 import models.Manager;
-import models.Product;
 
 public class AddProductCommand {
 
