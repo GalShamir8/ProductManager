@@ -104,7 +104,7 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 
 			@Override
 			public void accept(String key, Product value) {
-				sb.append(key + "\t" + value + "\n");
+				sb.append(key + "   " + value + "\n");
 			}
 		});
 
@@ -272,6 +272,7 @@ public class Manager implements ModelCommandable, Iterable<Product> {
 			if(p.getCustomer().isPromoted()) 
 				observers.add(p.getCustomer());
 		}
+		this.lastInsert = new ManagerMemento(this);
 	}
 
 	@Override

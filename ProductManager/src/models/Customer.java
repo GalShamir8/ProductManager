@@ -58,19 +58,19 @@ public class Customer implements CustomerObserverable {
 	 */
 	private void setName(String name) throws Exception {
 		if(name.isBlank())
-			name = defaultName;
+			name = defaultName; 
 		else {
 			for(int i = 0 ; i < name.length(); i++) {
-				if(!Character.isAlphabetic(name.charAt(i)) || !Character.isWhitespace(name.charAt(i)))
+				if(!Character.isLetter(name.charAt(i)) && !Character.isWhitespace(name.charAt(i)))
 					throw new Exception("Invalid Customer name:\nName must contains only letters");
 			}
 			this.name = name;
 		}
 	}
-
+ 
 	@Override
 	public String toString() {
-		return "Customer name: " + name.toUpperCase() + "\t Phone number: " + phone;
+		return "Customer name: " + name.toUpperCase() + " Phone number: " + phone;
 	}
 
 	@Override

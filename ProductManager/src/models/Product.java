@@ -47,7 +47,7 @@ public class Product {
 			name = defaultName;
 		else {
 			for(int i = 0 ; i < name.length(); i++) {
-				if(!Character.isAlphabetic(name.charAt(i)) || !Character.isWhitespace(name.charAt(i)))
+				if(!Character.isLetter(name.charAt(i)) && !Character.isWhitespace(name.charAt(i)))
 					throw new Exception("Invalid Product name:\nName must contains only letters");
 			}
 
